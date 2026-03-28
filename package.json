@@ -1,0 +1,38 @@
+{
+  "name": "anclas-mcp-server",
+  "version": "1.0.0",
+  "description": "福岡J・アンクラス公式サイトのMCPサーバー",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "anclas-mcp-server": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "anclas",
+    "soccer",
+    "wordpress"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/atani/anclas-mcp-server.git"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "@types/node": "^22.15.3"
+  }
+}
