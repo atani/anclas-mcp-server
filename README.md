@@ -60,14 +60,14 @@ Claude Desktop の設定ファイルを開きます。
 - Mac: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
-以下を追加してください（パスは自分の環境に合わせて変更）:
+以下を追加してください:
 
 ```json
 {
   "mcpServers": {
     "anclas": {
-      "command": "node",
-      "args": ["/path/to/anclas-mcp-server/dist/index.js"]
+      "command": "npx",
+      "args": ["anclas-mcp-server"]
     }
   }
 }
@@ -75,8 +75,8 @@ Claude Desktop の設定ファイルを開きます。
 
 ### 4. Claude Desktop を再起動
 
-再起動すると、チャット入力欄の横にハンマーアイコンが表示されます。
-クリックして「anclas-mcp-server」のツールが7つ表示されていれば完了です。
+再起動後、入力欄の `+` ボタン → 「コネクタ」を開くと `anclas` が表示されます。
+トグルがONになっていれば完了です。
 
 ### 5. 話しかける
 
