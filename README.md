@@ -7,6 +7,8 @@ WordPress REST APIから試合情報・ニュース・選手ブログを取得�
 
 Claude Desktopで普通に話しかけるだけで、アンクラスの情報を取得できます。
 
+<img src="docs/demo.png" width="600" alt="Claude Desktopでの使用例">
+
 ```
 あなた: 「アンクラスの次の試合いつ？」
 Claude: 4月12日(日) 12:00、Qリーグ開幕戦 vs ヴィアマテラス宮﨑Alegrita、
