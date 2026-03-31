@@ -37,30 +37,22 @@ Claude: 「2026シーズン ユニフォームデザイン決定のお知らせ�
 | `get_latest_news` | 最新クラブニュース |
 | `search_articles` | フリーワード記事検索 |
 
-## 使い方（Claude Desktop）
+## インストール
 
-### 1. このリポジトリをダウンロード
-
-```bash
-git clone https://github.com/atani/anclas-mcp-server.git
-cd anclas-mcp-server
-```
-
-### 2. ビルド
+### Claude Code
 
 ```bash
-npm install
-npm run build
+claude mcp add anclas -- npx anclas-mcp-server
 ```
 
-### 3. Claude Desktop に登録
+### Claude Desktop
 
-Claude Desktop の設定ファイルを開きます。
+設定ファイルに追加してClaude Desktopを再起動してください。
 
-- Mac: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-
-以下を追加してください:
+| OS | 設定ファイルのパス |
+|---|---|
+| Mac | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
 
 ```json
 {
@@ -73,12 +65,9 @@ Claude Desktop の設定ファイルを開きます。
 }
 ```
 
-### 4. Claude Desktop を再起動
-
 再起動後、入力欄の `+` ボタン → 「コネクタ」を開くと `anclas` が表示されます。
-トグルがONになっていれば完了です。
 
-### 5. 話しかける
+### 話しかける
 
 「アンクラスの次の試合いつ？」と聞いてみてください。
 
