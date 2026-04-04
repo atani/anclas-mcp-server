@@ -1,4 +1,5 @@
 const BASE_URL = "https://anclas.jp/wp-json/wp/v2";
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1時間
 
 export interface WPPost {
   id: number;
@@ -36,10 +37,23 @@ async function wpFetch<T>(path: string, params: Record<string, string> = {}): Pr
   for (const [key, value] of Object.entries(params)) {
     url.searchParams.set(key, value);
   }
-  const res = await fetch(url.toString(), { signal: AbortSignal.timeout(10_000) });
+  const startTime = Date.now();
+  let res: Response;
+  try {
+    res = await fetch(url.toString(), { signal: AbortSignal.timeout(10_000) });
+  } catch (err) {
+    const elapsed = Date.now() - startTime;
+    console.error(JSON.stringify({ timestamp: new Date().toISOString(), level: "ERROR", message: `WordPress API request failed: ${path}`, context: { path, elapsed_ms: elapsed, error: err instanceof Error ? err.message : String(err) } }));
+    throw new Error(`WordPress APIへの接続に失敗しました（${path}）`);
+  }
+  const elapsed = Date.now() - startTime;
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    throw new Error(`WordPress API error: ${res.status} ${res.statusText} - ${body}`);
+    console.error(JSON.stringify({ timestamp: new Date().toISOString(), level: "ERROR", message: `WordPress API error: ${res.status} ${path}`, context: { path, status: res.status, elapsed_ms: elapsed, body: body.slice(0, 500) } }));
+    throw new Error(`WordPress APIエラー（${res.status}）: ${path}`);
+  }
+  if (elapsed > 5000) {
+    console.error(JSON.stringify({ timestamp: new Date().toISOString(), level: "WARN", message: `WordPress API slow response: ${path}`, context: { path, elapsed_ms: elapsed } }));
   }
   return res.json() as Promise<T>;
 }
@@ -66,21 +80,30 @@ export async function getPosts(params: {
 }
 
 export async function getCategories(): Promise<WPCategory[]> {
-  return wpFetch<WPCategory[]>("/categories", { per_page: "100" });
+  if (categoriesCache && Date.now() < categoriesCacheExpiry) return categoriesCache;
+  categoriesCache = await wpFetch<WPCategory[]>("/categories", { per_page: "100" });
+  categoriesCacheExpiry = Date.now() + CACHE_TTL_MS;
+  return categoriesCache;
 }
 
 export async function getTags(): Promise<WPTag[]> {
-  return wpFetch<WPTag[]>("/tags", { per_page: "100" });
+  if (tagsCache && Date.now() < tagsCacheExpiry) return tagsCache;
+  tagsCache = await wpFetch<WPTag[]>("/tags", { per_page: "100" });
+  tagsCacheExpiry = Date.now() + CACHE_TTL_MS;
+  return tagsCache;
 }
 
-// 試合カテゴリを動的に取得（起動時にキャッシュ）
-let gameCategoriesCache: WPCategory[] | null = null;
+// カテゴリキャッシュ（初回取得後 CACHE_TTL_MS の間保持。シーズン切り替え時の新カテゴリ反映に備え有限TTL）
+let categoriesCache: WPCategory[] | null = null;
+let categoriesCacheExpiry = 0;
+
+// タグキャッシュ（選手ブログタグは頻繁に変わらないためセッション中キャッシュ）
+let tagsCache: WPTag[] | null = null;
+let tagsCacheExpiry = 0;
 
 export async function getGameCategories(): Promise<WPCategory[]> {
-  if (gameCategoriesCache) return gameCategoriesCache;
-  const all = await getCategories();
-  gameCategoriesCache = all.filter((c) => /^GAME/i.test(c.name));
-  return gameCategoriesCache;
+  const allCategories = await getCategories();
+  return allCategories.filter((c) => /^GAME/i.test(c.name));
 }
 
 export async function getAllGameCategoryIds(): Promise<number[]> {

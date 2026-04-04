@@ -1,10 +1,20 @@
+export const HOME_TEAM_NAME = "福岡J・アンクラス";
+const HOME_TEAM_PATTERN = /(?:福岡J・アンクラス|アンクラス)/;
+
+export interface MatchScore {
+  anclasGoals: number;
+  opponentGoals: number;
+}
+
 export interface MatchInfo {
   date: string | null;
   kickoff: string | null;
   venue: string | null;
   homeTeam: string;
   awayTeam: string | null;
-  score: string | null;
+  score: MatchScore | null;
+  /** 表示用スコア文字列（例: "4-1"） */
+  scoreDisplay: string | null;
   halfTimeScore: string | null;
   scorers: string[];
   competition: string | null;
@@ -31,39 +41,49 @@ export function stripHtml(html: string): string {
 }
 
 /** 投稿本文からスコア情報を抽出 */
-function parseScore(text: string): { score: string | null; halfTimeScore: string | null; awayTeam: string | null } {
+function parseScore(text: string): { score: MatchScore | null; scoreDisplay: string | null; halfTimeScore: string | null; awayTeam: string | null } {
   // パターン: "福岡J・アンクラス 4(1-0,3-1)1 琉球デイゴス"
-  const detailedScorePattern = /(?:福岡J・アンクラス|アンクラス)\s*(\d+)\s*\(([^)]+)\)\s*(\d+)\s*(.+?)(?:\n|$)/;
-  const detailedScoreMatch = text.match(detailedScorePattern);
-  if (detailedScoreMatch) {
+  const detailedPattern = new RegExp(
+    HOME_TEAM_PATTERN.source + String.raw`\s*(?<anclasGoals>\d+)\s*\((?<halfTime>[^)]+)\)\s*(?<opponentGoals>\d+)\s*(?<opponent>.+?)(?:\n|$)`,
+  );
+  const detailedMatch = text.match(detailedPattern);
+  if (detailedMatch?.groups) {
+    const anclasGoals = Number(detailedMatch.groups.anclasGoals);
+    const opponentGoals = Number(detailedMatch.groups.opponentGoals);
     return {
-      score: `${detailedScoreMatch[1]}-${detailedScoreMatch[3]}`,
-      halfTimeScore: detailedScoreMatch[2],
-      awayTeam: detailedScoreMatch[4].trim(),
+      score: { anclasGoals, opponentGoals },
+      scoreDisplay: `${anclasGoals}-${opponentGoals}`,
+      halfTimeScore: detailedMatch.groups.halfTime,
+      awayTeam: detailedMatch.groups.opponent.trim(),
     };
   }
 
   // パターン: "福岡J・アンクラス 4 - 1 琉球デイゴス"
-  const simpleScorePattern = /(?:福岡J・アンクラス|アンクラス)\s*(\d+)\s*[-–]\s*(\d+)\s*(.+?)(?:\n|$)/;
-  const simpleScoreMatch = text.match(simpleScorePattern);
-  if (simpleScoreMatch) {
+  const simplePattern = new RegExp(
+    HOME_TEAM_PATTERN.source + String.raw`\s*(?<anclasGoals>\d+)\s*[-–]\s*(?<opponentGoals>\d+)\s*(?<opponent>.+?)(?:\n|$)`,
+  );
+  const simpleMatch = text.match(simplePattern);
+  if (simpleMatch?.groups) {
+    const anclasGoals = Number(simpleMatch.groups.anclasGoals);
+    const opponentGoals = Number(simpleMatch.groups.opponentGoals);
     return {
-      score: `${simpleScoreMatch[1]}-${simpleScoreMatch[2]}`,
+      score: { anclasGoals, opponentGoals },
+      scoreDisplay: `${anclasGoals}-${opponentGoals}`,
       halfTimeScore: null,
-      awayTeam: simpleScoreMatch[3].trim(),
+      awayTeam: simpleMatch.groups.opponent.trim(),
     };
   }
 
-  return { score: null, halfTimeScore: null, awayTeam: null };
+  return { score: null, scoreDisplay: null, halfTimeScore: null, awayTeam: null };
 }
 
 /** 得点者を抽出 */
 function parseScorers(text: string): string[] {
   const pattern = /得点者[：:]\s*(.+?)(?:\n|$)/g;
   const scorers: string[] = [];
-  let m;
-  while ((m = pattern.exec(text)) !== null) {
-    scorers.push(...m[1].split(/[、,]/).map(s => s.trim()).filter(Boolean));
+  let scorerMatch;
+  while ((scorerMatch = pattern.exec(text)) !== null) {
+    scorers.push(...scorerMatch[1].split(/[、,]/).map(s => s.trim()).filter(Boolean));
   }
   return scorers;
 }
@@ -144,7 +164,7 @@ export function parseMatchInfo(title: string, contentHtml: string): MatchInfo {
   const text = stripHtml(contentHtml);
   const { date, kickoff } = parseDateTime(text);
   const venue = parseVenue(text);
-  const { score, halfTimeScore, awayTeam } = parseScore(text);
+  const { score, scoreDisplay, halfTimeScore, awayTeam } = parseScore(text);
   const scorers = parseScorers(text);
   const competition = parseCompetition(title);
   // スコアから対戦相手が取れなければラベル構造/vsパターンで補完
@@ -154,9 +174,10 @@ export function parseMatchInfo(title: string, contentHtml: string): MatchInfo {
     date,
     kickoff,
     venue,
-    homeTeam: "福岡J・アンクラス",
+    homeTeam: HOME_TEAM_NAME,
     awayTeam: resolvedAwayTeam,
     score,
+    scoreDisplay,
     halfTimeScore,
     scorers,
     competition,
