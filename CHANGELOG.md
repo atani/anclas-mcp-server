@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/atani/anclas-mcp-server/compare/v1.0.0...v1.0.1) (2026-07-24)
+
+
+### Bug Fixes
+
+* **deps:** npm 依存更新をパッチリリースの対象にする ([#42](https://github.com/atani/anclas-mcp-server/issues/42)) ([91ed458](https://github.com/atani/anclas-mcp-server/commit/91ed4585b9eaad9c260df6f8909895a57c5656ee))
+
 ## 1.0.0 (2026-04-08)
 
 
