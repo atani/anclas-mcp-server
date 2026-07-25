@@ -25,7 +25,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/atani/anclas-mcp-server.git"
+    "url": "git+https://github.com/atani/anclas-mcp-server.git"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
